@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phân Tích Đường Tròn Oxy</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
+        canvas { background-color: #ffffff; cursor: crosshair; touch-action: none; }
+        .math-font { font-family: 'Cambria Math', 'Times New Roman', serif; font-style: italic; }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <div class="max-w-7xl mx-auto">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-black text-slate-800 tracking-tight">CÔNG CỤ VẼ VÀ PHÂN TÍCH ĐƯỜNG TRÒN</h1>
+            <p class="text-slate-500 font-medium">Hai dạng phương trình | So sánh vị trí tương đối</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <!-- CỘT TRÁI: NHẬP LIỆU -->
+            <div class="lg:col-span-4 space-y-6">
+                <!-- Dạng 1 -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                    <h2 class="text-blue-600 font-bold mb-4 flex items-center">
+                        <span class="w-2 h-6 bg-blue-600 rounded-full mr-2"></span>
+                        Dạng Chính Tắc: $(x-a)^2 + (y-b)^2 = R^2$
+                    </h2>
+                    <div class="grid grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Tâm a</label>
+                            <input type="number" id="input_a" value="2" step="0.5" class="w-full px-3 py-2 bg-slate-50 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Tâm b</label>
+                            <input type="number" id="input_b" value="3" step="0.5" class="w-full px-3 py-2 bg-slate-50 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Bán kính R</label>
+                            <input type="number" id="input_r" value="5" min="0.1" step="0.1" class="w-full px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none font-bold text-blue-700">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dạng 2 -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                    <h2 class="text-indigo-600 font-bold mb-4 flex items-center">
+                        <span class="w-2 h-6 bg-indigo-600 rounded-full mr-2"></span>
+                        Dạng Tổng Quát: $x^2 + y^2 - 2ax - 2by + c = 0$
+                    </h2>
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div class="p-3 bg-slate-50 rounded-lg border border-dashed border-slate-300">
+                            <span class="text-[10px] text-slate-400 block uppercase">Hệ số a (Đồng bộ)</span>
+                            <span id="sync_a" class="text-lg font-bold text-slate-700">2</span>
+                        </div>
+                        <div class="p-3 bg-slate-50 rounded-lg border border-dashed border-slate-300">
+                            <span class="text-[10px] text-slate-400 block uppercase">Hệ số b (Đồng bộ)</span>
+                            <span id="sync_b" class="text-lg font-bold text-slate-700">3</span>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Hằng số c</label>
+                        <input type="number" id="input_c" value="-12" step="0.5" class="w-full px-3 py-2 bg-indigo-50 border border-indigo-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none font-bold text-indigo-700">
+                    </div>
+                </div>
+
+                <!-- Điểm M -->
+                <div class="bg-slate-800 p-6 rounded-2xl shadow-lg text-white">
+                    <h2 class="text-emerald-400 font-bold mb-4">Vị trí tương đối điểm M(x₀; y₀)</h2>
+                    <div class="grid grid-cols-2 gap-4">
+                        <input type="number" id="mx" value="6" placeholder="x₀" class="bg-slate-700 border-none rounded-lg px-3 py-2 text-white">
+                        <input type="number" id="my" value="6" placeholder="y₀" class="bg-slate-700 border-none rounded-lg px-3 py-2 text-white">
+                    </div>
+                </div>
+            </div>
+
+            <!-- CỘT GIỮA: TRỰC QUAN -->
+            <div class="lg:col-span-5 flex flex-col items-center">
+                <canvas id="canvas" width="500" height="500" class="rounded-3xl shadow-2xl border border-white"></canvas>
+                <div class="mt-4 text-slate-400 text-xs italic">Sử dụng chuột/tay để di chuyển tâm I trên Canvas</div>
+            </div>
+
+            <!-- CỘT PHẢI: KẾT QUẢ PHÂN TÍCH -->
+            <div class="lg:col-span-3 space-y-4">
+                <div id="result-card" class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 h-full">
+                    <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-6">Báo Cáo Phân Tích</h3>
+                    
+                    <div class="space-y-6">
+                        <!-- Tâm và R -->
+                        <div class="flex justify-between items-end border-b pb-4">
+                            <div>
+                                <p class="text-[10px] text-slate-400 uppercase font-bold">Tâm Đường Tròn</p>
+                                <p id="res-center" class="text-2xl font-bold text-slate-800">I(2; 3)</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-[10px] text-slate-400 uppercase font-bold">Bán Kính</p>
+                                <p id="res-radius" class="text-2xl font-bold text-blue-600">R = 5</p>
+                            </div>
+                        </div>
+
+                        <!-- Phương trình -->
+                        <div class="space-y-4">
+                            <div>
+                                <p class="text-[10px] text-slate-400 uppercase font-bold mb-1">Phương trình Chính tắc</p>
+                                <div id="eqn-std" class="math-font text-sm p-2 bg-blue-50 text-blue-800 rounded-lg overflow-x-auto whitespace-nowrap"></div>
+                            </div>
+                            <div>
+                                <p class="text-[10px] text-slate-400 uppercase font-bold mb-1">Phương trình Tổng quát</p>
+                                <div id="eqn-gen" class="math-font text-sm p-2 bg-indigo-50 text-indigo-800 rounded-lg overflow-x-auto whitespace-nowrap"></div>
+                            </div>
+                        </div>
+
+                        <!-- Phân tích điểm M -->
+                        <div id="m-analysis" class="pt-4 border-t border-slate-100">
+                            <p class="text-[10px] text-emerald-600 uppercase font-bold mb-3">Phân tích điểm M</p>
+                            <div class="bg-slate-50 p-4 rounded-xl space-y-3">
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-slate-500 italic font-serif">d(I, M) = </span>
+                                    <span id="im-dist" class="font-bold text-slate-700">0.00</span>
+                                </div>
+                                <div class="flex justify-between items-center text-sm">
+                                    <span class="text-slate-500">So sánh:</span>
+                                    <span id="comparison" class="px-2 py-0.5 bg-white border rounded font-mono font-bold">IM < R</span>
+                                </div>
+                                <div id="m-status" class="text-center font-bold text-xs py-2 rounded-lg">---</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const SCALE = 20; // 1 đơn vị = 20px
+        const CENTER_X = canvas.width / 2;
+        const CENTER_Y = canvas.height / 2;
+
+        let state = { a: 2, b: 3, r: 5, c: -12, mx: 6, my: 6 };
+
+        function init() {
+            // Lắng nghe thay đổi inputs
+            const inputs = ['input_a', 'input_b', 'input_r', 'input_c', 'mx', 'my'];
+            inputs.forEach(id => {
+                document.getElementById(id).addEventListener('input', (e) => handleInputChange(e.target.id, e.target.value));
+            });
+
+            // Lắng nghe click canvas để đổi tâm
+            canvas.addEventListener('mousedown', (e) => {
+                const rect = canvas.getBoundingClientRect();
+                const x = (e.clientX - rect.left - CENTER_X) / SCALE;
+                const y = (CENTER_Y - (e.clientY - rect.top)) / SCALE;
+                
+                document.getElementById('input_a').value = x.toFixed(1);
+                document.getElementById('input_b').value = y.toFixed(1);
+                handleInputChange('input_a', x);
+                handleInputChange('input_b', y);
+            });
+
+            updateAll();
+        }
+
+        function handleInputChange(id, value) {
+            const val = parseFloat(value) || 0;
+            
+            if (id === 'input_a') state.a = val;
+            if (id === 'input_b') state.b = val;
+            if (id === 'input_r') {
+                state.r = Math.max(0.1, val);
+                state.c = state.a**2 + state.b**2 - state.r**2;
+            }
+            if (id === 'input_c') {
+                state.c = val;
+                const r2 = state.a**2 + state.b**2 - state.c;
+                if (r2 > 0) state.r = Math.sqrt(r2);
+            }
+            if (id === 'mx') state.mx = val;
+            if (id === 'my') state.my = val;
+
+            // Nếu đổi a hoặc b, tự động cập nhật c để bảo toàn bán kính hiện tại
+            if (id === 'input_a' || id === 'input_b') {
+                state.c = state.a**2 + state.b**2 - state.r**2;
+            }
+
+            updateAll();
+        }
+
+        function updateAll() {
+            // Đồng bộ UI nhập liệu
+            document.getElementById('sync_a').innerText = state.a;
+            document.getElementById('sync_b').innerText = state.b;
+            document.getElementById('input_c').value = state.c.toFixed(2);
+            document.getElementById('input_r').value = state.r.toFixed(2);
+
+            // Cập nhật kết quả chữ
+            document.getElementById('res-center').innerText = `I(${state.a}; ${state.b})`;
+            document.getElementById('res-radius').innerText = `R = ${state.r.toFixed(2)}`;
+
+            // Phương trình
+            const signA = state.a >= 0 ? '-' : '+';
+            const signB = state.b >= 0 ? '-' : '+';
+            const absA = Math.abs(state.a);
+            const absB = Math.abs(state.b);
+            
+            document.getElementById('eqn-std').innerHTML = `(x ${signA} ${absA})² + (y ${signB} ${absB})² = ${ (state.r**2).toFixed(2) }`;
+            
+            const gA = (-2 * state.a).toFixed(1);
+            const gB = (-2 * state.b).toFixed(1);
+            const gC = state.c >= 0 ? `+ ${state.c.toFixed(1)}` : `- ${Math.abs(state.c).toFixed(1)}`;
+            document.getElementById('eqn-gen').innerHTML = `x² + y² ${gA >= 0 ? '+' : ''}${gA}x ${gB >= 0 ? '+' : ''}${gB}y ${gC} = 0`;
+
+            // Phân tích M
+            const im = Math.sqrt((state.mx - state.a)**2 + (state.my - state.b)**2);
+            document.getElementById('im-dist').innerText = im.toFixed(3);
+            
+            const comp = document.getElementById('comparison');
+            const status = document.getElementById('m-status');
+            
+            if (Math.abs(im - state.r) < 0.01) {
+                comp.innerText = "IM ≈ R";
+                status.innerText = "M NẰM TRÊN ĐƯỜNG TRÒN";
+                status.className = "text-center font-bold text-xs py-2 rounded-lg bg-emerald-500 text-white";
+            } else if (im < state.r) {
+                comp.innerText = "IM < R";
+                status.innerText = "M NẰM TRONG ĐƯỜNG TRÒN";
+                status.className = "text-center font-bold text-xs py-2 rounded-lg bg-blue-500 text-white";
+            } else {
+                comp.innerText = "IM > R";
+                status.innerText = "M NẰM NGOÀI ĐƯỜNG TRÒN";
+                status.className = "text-center font-bold text-xs py-2 rounded-lg bg-orange-500 text-white";
+            }
+
+            draw();
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Lưới
+            ctx.strokeStyle = '#f1f5f9';
+            ctx.lineWidth = 1;
+            for(let x = 0; x <= canvas.width; x += SCALE) {
+                ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+            }
+            for(let y = 0; y <= canvas.height; y += SCALE) {
+                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+            }
+
+            // Trục tọa độ
+            ctx.strokeStyle = '#94a3b8';
+            ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.moveTo(0, CENTER_Y); ctx.lineTo(canvas.width, CENTER_Y); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(CENTER_X, 0); ctx.lineTo(CENTER_X, canvas.height); ctx.stroke();
+
+            // Tọa độ số (chẵn)
+            ctx.fillStyle = '#64748b';
+            ctx.font = '10px Inter';
+            for(let i = -10; i <= 10; i += 2) {
+                if(i === 0) continue;
+                ctx.fillText(i, CENTER_X + i * SCALE - 5, CENTER_Y + 15);
+                ctx.fillText(i, CENTER_X - 15, CENTER_Y - i * SCALE + 5);
+            }
+
+            // Đường tròn
+            const drawX = CENTER_X + state.a * SCALE;
+            const drawY = CENTER_Y - state.b * SCALE;
+            const drawR = state.r * SCALE;
+
+            ctx.beginPath();
+            ctx.arc(drawX, drawY, drawR, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(59, 130, 246, 0.1)';
+            ctx.fill();
+            ctx.strokeStyle = '#3b82f6';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            // Điểm I
+            ctx.beginPath();
+            ctx.arc(drawX, drawY, 4, 0, Math.PI * 2);
+            ctx.fillStyle = '#1e40af';
+            ctx.fill();
+            ctx.fillText("I", drawX + 5, drawY - 5);
+
+            // Điểm M
+            const drawMX = CENTER_X + state.mx * SCALE;
+            const drawMY = CENTER_Y - state.my * SCALE;
+            ctx.beginPath();
+            ctx.arc(drawMX, drawMY, 5, 0, Math.PI * 2);
+            ctx.fillStyle = '#ef4444';
+            ctx.fill();
+            ctx.fillText(`M(${state.mx};${state.my})`, drawMX + 8, drawMY - 8);
+
+            // Đoạn IM
+            ctx.beginPath();
+            ctx.setLineDash([5, 3]);
+            ctx.strokeStyle = '#94a3b8';
+            ctx.moveTo(drawX, drawY);
+            ctx.lineTo(drawMX, drawMY);
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
